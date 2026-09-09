@@ -2,12 +2,13 @@ package server
 
 import (
 	"http/handlers"
-	"log"
+	"http/handlers/middleware"
 	"net/http"
 )
 
 type HTTPServer struct {
 	handlers *handlers.Handler
+	svr      *http.Server
 }
 
 func NewHTTPServer(hh *handlers.Handler) *HTTPServer {
@@ -26,5 +27,13 @@ func (hs *HTTPServer) StartServer() {
 	router.HandleFunc("PUT /tasks/{title}", hs.handlers.HandleUnCompliteTask)
 	router.HandleFunc("DELETE /tasks/{title}", hs.handlers.HandleDeleteTask)
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	logger := middleware.Logger(router)
+
+	hs.svr = &http.Server{
+		Addr:    ":8080",
+		Handler: logger,
+	}
+
+	hs.svr.ListenAndServe()
+
 }
